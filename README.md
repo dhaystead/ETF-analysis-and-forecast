@@ -1,0 +1,2 @@
+# ETF-analysis-prediction
+ Personal project. A tool for analyzing and forecasting ETF close prices (in particular, around 200 of the commission free ETFs from TDAmeritrade) using time series analysis and machine learning techniques. Also includes ipynbs with time series analysis and machine learning models of the DON ETF. Data used obtained from Kaggle Huge Stock Market Dataset : https://www.kaggle.com/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
