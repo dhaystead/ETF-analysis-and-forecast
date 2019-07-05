@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import math
 import os
+from pandas_datareader import data
+import json
+import csv
 from statsmodels.tsa.stattools import adfuller, pacf, acf, kpss
 from statsmodels.tsa.arima_model import ARIMA
 from scipy.stats import skew, ttest_rel
@@ -14,9 +17,13 @@ from sklearn.svm import SVR
 
 os.chdir("ETFs")
 
+
+
 def get_data(dataset_name):
-     df_data= pd.read_csv(dataset_name)
-     return df_data
+     df= pd.read_csv(dataset_name)
+     df = df.set_index('Date')
+     df = df.drop(['OpenInt', 'Open'], axis = 1)
+     return df
 
 def rolling_mean(dataset, window):
     rolling_mean = dataset.rolling(window=window).mean().dropna()
@@ -39,7 +46,7 @@ def plot_rolling_stats(dataset, window):
 
 
 def adf_test(dataset):
-    dickey_fuller = adfuller(dataset.Close, autolag='AIC')
+    dickey_fuller = adfuller(dataset, autolag='AIC')
     df_results = pd.Series(dickey_fuller[:5], index=['p-value','test statistic' , '# of lags', '# of observations', 'critical values'])
     return df_results
 
@@ -102,10 +109,9 @@ def automated_p_q_values(timeseries):
             break
     return p, q
 
-def get_arima_parameters(dataset):
+def get_arima_parameters(timeseries):
     p, d, q = 0, 0, 0
-    timeseries = dataset.Close
-    if not check_stationary(dataset):
+    if not check_stationary(timeseries):
         if skew(timeseries) > .10:
             timeseries = log_transform(timeseries)
         elif skew(timeseries) < -.10:
@@ -116,22 +122,15 @@ def get_arima_parameters(dataset):
 
 def build_arima_model(dataset):
     p, d, q = get_arima_parameters(dataset)
-    split_len = math.floor(.8 * len(dataset))
-    test_len = len(dataset) - split_len
-    X_train, X_test = dataset.Close.loc[:split_len], dataset.Close.loc[split_len:]
-    model = ARIMA(X_train, (p, d, q))
+    model = ARIMA(dataset, (p, d, q))
     model_fit = model.fit(disp=0)
-    model_predict = model_fit.forecast(steps = test_len)[0]
-    mse = mean_squared_error(X_test, model_predict)
-    final_model = ARIMA(dataset.Close, (p, d, q))
-    final_model_fit = final_model.fit(disp = 0)
-    return final_model_fit, mse
+    return model_fit
 
-# def arima_prediction(dataset, window):
-#     model_fit, mse = build_arima_model(dataset)
-#     forecast = model_fit.forecast(steps = window)[0]
-#     return model_fit, forecast, mse
-
+def arima_prediction(dataset, window):
+    timeseries = dataset.Close
+    model_fit = build_arima_model(timeseries)
+    forecast = model_fit.forecast(steps = window)
+    return forecast
 
 
 def svm_prediction(dataset):
@@ -164,6 +163,4 @@ def svm_prediction(dataset):
     for i in range(1, len(mse_lst)):
         if mse_lst[min_mse] > mse_lst[i]:
             min_mse = i
-    return predict_lst[min_mse]
-
-don = get_data("don.us.csv")
+    return predict_lst[min_mse], min_mse
