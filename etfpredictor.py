@@ -1,17 +1,12 @@
 import numpy as np
 import pandas as pd
-import math
 import os
-from pandas_datareader import data
-import json
-import csv
-from statsmodels.tsa.stattools import adfuller, pacf, acf, kpss
+from statsmodels.tsa.stattools import adfuller, pacf, acf
 from statsmodels.tsa.arima_model import ARIMA
-from scipy.stats import skew, ttest_rel
+from scipy.stats import skew
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 
